@@ -3,21 +3,17 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
 // https://vite.dev/config/
-export default defineConfig(({ command }) => ({
+export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-  // Base public path for built asset URLs.
-  // - Dev server always uses '/'.
-  // - Production builds default to the GitHub Pages *project* path so the site
-  //   works at https://<user>.github.io/margo-landingpage/.
-  // - CUSTOM-DOMAIN CUTOVER: build with `VITE_BASE=/` (a domain serves from the
-  //   root), re-add public/CNAME, and configure DNS. See ROADMAP.md.
-  base:
-    command === 'build'
-      ? process.env.VITE_BASE || '/margo-landingpage/'
-      : '/',
-}))
+  // Served from the root in every environment:
+  //   - GitHub Pages *user* site:   https://yudainakazaki.github.io/
+  //   - Custom domain (later):      https://2bcdef4hijkl1n5pq3stuvwxyz.jp/
+  // So base stays '/'. (A GitHub Pages *project* site would instead need
+  // base '/<repo>/', which is exactly the subpath hassle we're avoiding.)
+  base: '/',
+})

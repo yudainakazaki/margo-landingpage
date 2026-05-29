@@ -7,7 +7,7 @@ Vite** and deployed as a static site. Bilingual (Japanese / English).
 > editorial, image-forward. Detailed design TBD; the site currently ships a
 > "coming soon" placeholder.
 
-- **Live preview (temporary):** <https://yudainakazaki.github.io/margo-landingpage/>
+- **Live preview (after repo rename):** <https://yudainakazaki.github.io/>
 - **Production domain (planned):** `2bcdef4hijkl1n5pq3stuvwxyz.jp`
 
 ## Getting started
@@ -67,16 +67,16 @@ stay in sync with the active locale.
 Pushes to `main` build and deploy to **GitHub Pages** automatically via
 `.github/workflows/deploy.yml`.
 
-### Base path & custom-domain cutover
+### Hosting model & custom-domain cutover
 
-GitHub Pages *project* sites are served from `/<repo>/`, so the production build
-defaults `base` to `/margo-landingpage/` (see `vite.config.js`). The dev server
-uses `/`. When the custom domain is ready, build with `VITE_BASE=/`, re-add
-`public/CNAME` with the chosen host, and configure DNS — see the **Custom-domain
-cutover** section in [ROADMAP.md](./ROADMAP.md).
+This is published as a GitHub Pages **user site** (`yudainakazaki.github.io`),
+served from the **root** — so Vite `base` is `/` everywhere and there is no
+project subpath to manage. When the custom domain is ready, **no base change is
+needed**: add `public/CNAME` with the chosen host and configure DNS — see the
+**Custom-domain cutover** section in [ROADMAP.md](./ROADMAP.md).
 
 ## Roadmap
 
 See **[ROADMAP.md](./ROADMAP.md)** for the full plan and confirmed decisions:
-hosting (GitHub Pages), content (in-repo → CMS-ready), domain (Onamae.com `.jp`),
-DNS, CI/CD, and the launch checklist.
+hosting (GitHub Pages user site), content (in-repo → CMS-ready), domain
+(Onamae.com `.jp`), DNS, CI/CD, and the launch checklist.

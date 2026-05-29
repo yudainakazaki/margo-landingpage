@@ -15,12 +15,12 @@ site ships a clean "coming soon" placeholder.
 
 - ✅ Foundation, i18n, content layer, and CI/CD are merged to `main`.
 - ✅ GitHub Pages is enabled and **deploying on every push to `main`**.
-- 🌐 **Live preview (temporary):**
-  <https://yudainakazaki.github.io/margo-landingpage/>
+- 🧭 **Hosting model: GitHub Pages _user_ site** (served from the **root**), so
+  the build `base` is `/` everywhere — no project subpath, no path juggling.
+- 🌐 **Live preview (after repo rename):** <https://yudainakazaki.github.io/>
 - ⏳ Custom domain `2bcdef4hijkl1n5pq3stuvwxyz.jp` not registered yet (owner).
-  Until then the site is served from the **project subpath**, so the build's
-  `base` is `/margo-landingpage/`. The cutover to the root domain is a single
-  documented step (see **Custom-domain cutover** below).
+  Because both the user-site URL and the domain serve from the root, the
+  cutover needs **no `base` change** — just add `CNAME` + DNS.
 
 ---
 
@@ -28,7 +28,7 @@ site ships a clean "coming soon" placeholder.
 
 | Question        | Decision                                                                 |
 | --------------- | ------------------------------------------------------------------------ |
-| **Hosting**     | **GitHub Pages** (free, custom domain + auto HTTPS).                     |
+| **Hosting**     | **GitHub Pages — user site** (`yudainakazaki.github.io`, served at root). |
 | **Content/CMS** | **In-repo content for now**, behind a provider abstraction so migrating to a real CMS later is a single-file change. |
 | **Domain**      | **Onamae.com** registrar; a Japanese postal address is available.        |
 | **Language**    | **Bilingual i18n: Japanese ⇄ English** (Japanese is the default).        |
@@ -41,8 +41,8 @@ site ships a clean "coming soon" placeholder.
 | Concern        | Decision                                                       | Cost (est.)            |
 | -------------- | -------------------------------------------------------------- | ---------------------- |
 | Framework      | Vue 3 + Vite, Composition API (`<script setup>`)               | Free                   |
-| Repository     | This Git repo (GitHub)                                          | Free                   |
-| Hosting        | **GitHub Pages** — static, free, custom-domain + TLS           | Free                   |
+| Repository     | This Git repo, renamed to `yudainakazaki.github.io`            | Free                   |
+| Hosting        | **GitHub Pages user site** — static, free, root URL + TLS      | Free                   |
 | i18n           | `vue-i18n` (JA default, EN fallback)                           | Free                   |
 | Content        | In-repo provider now → CMS-ready (Sanity/Contentful) later     | Free                   |
 | Domain         | `2bcdef4hijkl1n5pq3stuvwxyz.jp` via Onamae.com                 | ~¥0 reg / ~¥1,276 yr   |
@@ -63,17 +63,30 @@ site ships a clean "coming soon" placeholder.
 - [x] GitHub Actions: `ci.yml` (lint + build) and `deploy.yml` (Pages).
 - [x] **i18n (JA/EN)** with a language switcher and persisted preference.
 - [x] **CMS-ready content layer** (in-repo provider today).
-- [x] GitHub Pages enabled; pipeline deploying to the project URL.
+- [x] GitHub Pages enabled; pipeline deploying.
 
 ---
 
-## Phase 1 — Repository hygiene
+## Phase 1 — Switch to a user site (root URL)
 
-1. **Protect `main`**: Settings → Branches → require the `CI` check to pass and
-   at least one review before merge.
-2. **Default branch**: confirm `main`.
-3. **Secrets**: none required for the GitHub Pages path.
-4. **Issues / Project board** (optional): track design + content tasks.
+To get a **path-free** URL (now and after cutover), this repo is published as a
+GitHub Pages **user site**.
+
+1. **Rename the repo** to `yudainakazaki.github.io`:
+   Settings → General → *Repository name* → `yudainakazaki.github.io` → Rename.
+   (Assumes no existing `yudainakazaki.github.io` repo; only one user site is
+   allowed per account.)
+2. **Update your local remote** afterward (GitHub also keeps a redirect):
+   ```bash
+   git remote set-url origin https://github.com/yudainakazaki/yudainakazaki.github.io.git
+   ```
+3. **Confirm Pages source** is still *GitHub Actions*
+   (Settings → Pages). The published URL becomes <https://yudainakazaki.github.io/>.
+
+### Repository hygiene
+
+- **Protect `main`**: require the `CI` check to pass + a review before merge.
+- **Secrets**: none required for GitHub Pages.
 
 ---
 
@@ -85,8 +98,8 @@ The scaffold is intentionally thin so the real design drops in cleanly.
 
    ```bash
    npm install
-   npm run dev      # http://localhost:5173  (dev base is '/')
-   npm run build    # outputs to dist/ (base '/margo-landingpage/')
+   npm run dev      # http://localhost:5173
+   npm run build    # outputs to dist/  (base '/')
    npm run preview  # serve the production build locally
    ```
 
@@ -107,7 +120,7 @@ The scaffold is intentionally thin so the real design drops in cleanly.
        index.js            #   getSiteContent() + provider selection
        providers/local.js  #   in-repo provider
        data/site.js        #   the actual in-repo content (edit here)
-   public/                 # static files copied verbatim (favicon, CNAME at cutover)
+   public/                 # static files copied verbatim (favicon; CNAME at cutover)
    ```
 
 ### i18n (done)
@@ -140,43 +153,30 @@ Content is read through a single function, `getSiteContent(locale)`, from
 
 ---
 
-## Phase 3 — Hosting: GitHub Pages (live)
+## Phase 3 — Hosting: GitHub Pages user site (root)
 
-The site is a static bundle served free from GitHub Pages. The deploy workflow
-publishes `dist/` on every push to `main`.
+The site is a static bundle served free from GitHub Pages at the **root** URL,
+so `base` is `/` and there is no subpath to manage.
 
-- **Enable once (done)**: Settings → Pages → Source: **GitHub Actions**. (The
-  workflow token can't create the Pages site itself, so this one-time UI toggle
-  was required.)
-- **Project URL (current)**: <https://yudainakazaki.github.io/margo-landingpage/>
-  — works because the build `base` is `/margo-landingpage/`.
-
-### Base path, explained
-
-GitHub Pages *project* sites live under `/<repo>/`, so built asset URLs must be
-prefixed with that path or the browser requests them from the wrong place
-(blank page). The custom domain serves from the **root**, where `base` must be
-`/`. `vite.config.js` therefore defaults the build to `/margo-landingpage/` and
-lets `VITE_BASE` override it at cutover.
+- **Enable once (done)**: Settings → Pages → Source: **GitHub Actions**.
+- **URL after rename**: <https://yudainakazaki.github.io/>
 
 ---
 
 ## Phase 3.5 — Custom-domain cutover checklist
 
-Do these **once the domain is registered and DNS can be set**:
+Do these **once the domain is registered and DNS can be set**. Because the user
+site already serves from the root, **no `base` change is needed** — just:
 
 1. **Decide canonical host** — apex `DOMAIN.jp` or `www.DOMAIN.jp`
    (current lean: `www`). The chosen host goes in the `CNAME` file.
-2. **Re-add `public/CNAME`** containing the canonical host, e.g.
+2. **Add `public/CNAME`** containing the canonical host, e.g.
    `www.2bcdef4hijkl1n5pq3stuvwxyz.jp` (or the apex).
-3. **Build at the root**: set `VITE_BASE=/` for the production build (e.g. add
-   `env: { VITE_BASE: '/' }` to the build step in `.github/workflows/deploy.yml`,
-   or change the default in `vite.config.js`).
-4. **DNS at Onamae** (see Phase 5): apex A-records to GitHub + `www` CNAME.
-5. **GitHub**: Settings → Pages → Custom domain (auto-filled by the `CNAME`
+3. **DNS at Onamae** (see Phase 5): apex A-records to GitHub + `www` CNAME.
+4. **GitHub**: Settings → Pages → Custom domain (auto-filled by the `CNAME`
    file) → wait for the DNS check → enable **Enforce HTTPS**.
 
-After cutover the project URL redirects to the custom domain automatically.
+After cutover the `github.io` URL redirects to the custom domain automatically.
 
 ---
 
@@ -265,6 +265,7 @@ deploys.
 
 ## Next up
 
-The pipeline is live at the project URL. Remaining: register the domain on
-Onamae + configure DNS, run the **Custom-domain cutover** (Phase 3.5), and
-implement the real design + bilingual content once specs arrive (Phase 2 → 7).
+Rename the repo to `yudainakazaki.github.io` (path-free root URL), then:
+register the domain on Onamae + configure DNS, run the **Custom-domain cutover**
+(Phase 3.5 — no base change needed), and implement the real design + bilingual
+content once specs arrive (Phase 2 → 7).
