@@ -1,38 +1,58 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, watch, watchEffect } from 'vue'
+import { useI18n } from 'vue-i18n'
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import SiteFooter from '@/components/SiteFooter.vue'
+import { getSiteContent } from '@/content'
 
-// Placeholder landing state. Replace with real content once the design is in.
+const { locale } = useI18n()
+
 const ready = ref(false)
+const content = ref(null)
 
-onMounted(() => {
-  // Small mount delay so the intro fade reads as intentional, not a flash.
-  requestAnimationFrame(() => {
-    ready.value = true
-  })
+// Reload content whenever the locale changes. `getSiteContent` is async so this
+// already behaves correctly when content moves to a CMS behind the same call.
+watch(
+  locale,
+  async (current) => {
+    content.value = await getSiteContent(current)
+    requestAnimationFrame(() => {
+      ready.value = true
+    })
+  },
+  { immediate: true },
+)
+
+// Keep the document title in sync with the localized content.
+watchEffect(() => {
+  if (content.value?.meta?.title) {
+    document.title = content.value.meta.title
+  }
 })
 </script>
 
 <template>
-  <main class="landing" :class="{ 'is-ready': ready }">
-    <div class="landing__inner">
-      <p class="landing__eyebrow">Art Project</p>
-      <h1 class="landing__title">Margo</h1>
-      <p class="landing__tagline">Coming soon.</p>
-    </div>
+  <div class="layout" :class="{ 'is-ready': ready }">
+    <header class="layout__header">
+      <LanguageSwitcher />
+    </header>
+
+    <main v-if="content" class="landing">
+      <p class="landing__eyebrow">{{ content.hero.eyebrow }}</p>
+      <h1 class="landing__title">{{ content.hero.title }}</h1>
+      <p class="landing__tagline">{{ content.hero.tagline }}</p>
+    </main>
+
     <SiteFooter />
-  </main>
+  </div>
 </template>
 
 <style scoped>
-.landing {
+.layout {
   min-height: 100svh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  padding: 2rem;
+  padding: 1.5rem 2rem 2rem;
   opacity: 0;
   transform: translateY(12px);
   transition:
@@ -40,16 +60,23 @@ onMounted(() => {
     transform 1.1s ease;
 }
 
-.landing.is-ready {
+.layout.is-ready {
   opacity: 1;
   transform: translateY(0);
 }
 
-.landing__inner {
+.layout__header {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.landing {
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
+  text-align: center;
 }
 
 .landing__eyebrow {
