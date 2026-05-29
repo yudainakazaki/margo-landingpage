@@ -11,46 +11,54 @@ site ships a clean "coming soon" placeholder.
 
 ---
 
-## At a glance
+## Confirmed decisions
 
-| Concern        | Decision                                                      | Cost (est.)            |
-| -------------- | ------------------------------------------------------------- | ---------------------- |
-| Framework      | Vue 3 + Vite, Composition API (`<script setup>`)              | Free                   |
-| Repository     | This Git repo (GitHub)                                         | Free                   |
-| Hosting        | **GitHub Pages** (default) — static, free, custom-domain + TLS | Free                   |
-| Alt. hosting   | Cloudflare Pages (best CDN) / Netlify / Vercel                | Free tiers             |
-| Domain         | `2bcdef4hijkl1n5pq3stuvwxyz.jp` (general-use .jp)             | ~¥0–2,035 / ~¥1,276–3,803 yr |
-| CI/CD          | GitHub Actions (lint + build on PR, deploy on `main`)         | Free                   |
-| **Total/yr**   |                                                               | **≈ ¥1,300–3,800**     |
-
-> Because the site is a static SPA, hosting can be **¥0**. The domain is the only
-> recurring cost, so total running cost is roughly the renewal price of the
-> `.jp` domain.
+| Question        | Decision                                                                 |
+| --------------- | ------------------------------------------------------------------------ |
+| **Hosting**     | **GitHub Pages** for now (free, custom domain + auto HTTPS).             |
+| **Content/CMS** | **In-repo content for now**, behind a provider abstraction so migrating to a real CMS later is a single-file change. |
+| **Domain**      | **Onamae.com** registrar; a Japanese postal address is available.        |
+| **Language**    | **Bilingual i18n: Japanese ⇄ English** (Japanese is the default).        |
 
 ---
 
-## Phase 0 — Foundations (done in this PR)
+## At a glance
+
+| Concern        | Decision                                                       | Cost (est.)            |
+| -------------- | -------------------------------------------------------------- | ---------------------- |
+| Framework      | Vue 3 + Vite, Composition API (`<script setup>`)               | Free                   |
+| Repository     | This Git repo (GitHub)                                          | Free                   |
+| Hosting        | **GitHub Pages** — static, free, custom-domain + TLS           | Free                   |
+| i18n           | `vue-i18n` (JA default, EN fallback)                           | Free                   |
+| Content        | In-repo provider now → CMS-ready (Sanity/Contentful) later     | Free                   |
+| Domain         | `2bcdef4hijkl1n5pq3stuvwxyz.jp` via Onamae.com                 | ~¥0 reg / ~¥1,276 yr   |
+| CI/CD          | GitHub Actions (lint + build on PR, deploy on `main`)          | Free                   |
+| **Total/yr**   |                                                                | **≈ ¥1,300**           |
+
+> Because the site is a static SPA, hosting is **¥0**. The domain renewal is the
+> only meaningful recurring cost.
+
+---
+
+## Phase 0 — Foundations (done)
 
 - [x] Repository initialized (GitHub).
 - [x] Vue 3 + Vite scaffold using the Composition API.
-- [x] Minimal "coming soon" landing placeholder (`src/App.vue`).
+- [x] Minimal "coming soon" landing placeholder.
 - [x] Tooling: ESLint + Prettier.
 - [x] GitHub Actions: `ci.yml` (lint + build) and `deploy.yml` (Pages).
-- [x] `public/CNAME` pre-set to the production domain for GitHub Pages.
-- [x] Verified local `npm run build` produces a working `dist/`.
-
-What you get after merging: a green CI pipeline and a deployable static site.
-Everything below is the operational work that follows.
+- [x] `public/CNAME` pre-set to the production domain.
+- [x] **i18n (JA/EN)** with a language switcher and persisted preference.
+- [x] **CMS-ready content layer** (in-repo provider today).
 
 ---
 
 ## Phase 1 — Repository hygiene
 
-1. **Protect `main`**: Settings → Branches → add a rule requiring the `CI`
-   check to pass and at least one review before merge.
+1. **Protect `main`**: Settings → Branches → require the `CI` check to pass and
+   at least one review before merge.
 2. **Default branch**: confirm `main`.
-3. **Secrets**: none required for the GitHub Pages path. (Cloudflare/Netlify/
-   Vercel would need API tokens — see Phase 3 alternatives.)
+3. **Secrets**: none required for the GitHub Pages path.
 4. **Issues / Project board** (optional): track design + content tasks.
 
 ---
@@ -68,44 +76,60 @@ The scaffold is intentionally thin so the real design drops in cleanly.
    npm run preview  # serve the production build locally
    ```
 
-2. **Structure** (extend as the design lands)
+2. **Structure**
 
    ```
-   index.html            # app shell, <head>, meta/OG tags
+   index.html              # app shell, <head>, meta/OG tags
    src/
-     main.js             # app entry (createApp)
-     App.vue             # root component (Composition API)
-     assets/main.css     # global styles + design tokens (CSS variables)
-     components/         # reusable UI (SiteFooter.vue today)
-   public/               # static files copied verbatim (favicon, CNAME)
+     main.js               # app entry (createApp + i18n)
+     App.vue               # root component (Composition API)
+     assets/main.css       # global styles + design tokens (CSS variables)
+     components/           # reusable UI (LanguageSwitcher, SiteFooter)
+     i18n/                 # vue-i18n setup
+       index.js            #   instance + setLocale()
+       config.js           #   supported locales, default, detection
+       locales/{en,ja}.json#   UI strings
+     content/              # content layer (the CMS seam)
+       index.js            #   getSiteContent() + provider selection
+       providers/local.js  #   in-repo provider
+       data/site.js        #   the actual in-repo content (edit here)
+   public/                 # static files copied verbatim (favicon, CNAME)
    ```
+
+### i18n (done)
+
+- `vue-i18n` in Composition mode (`legacy: false`).
+- **Japanese is the default**; English is the fallback.
+- Initial locale = saved choice → browser language → default.
+- `<html lang>` and `document.title` stay in sync with the active locale.
+- UI strings live in `src/i18n/locales/*.json`; localized **content** lives in
+  the content layer (below).
+
+### Content layer & CMS migration path (done)
+
+Content is read through a single function, `getSiteContent(locale)`, from
+`@/content`. Components never know where content comes from.
+
+- **Today**: `localProvider` reads `src/content/data/site.js` (edit content
+  there). The call is `async`, mirroring a network-backed CMS.
+- **Later (CMS)**: add `src/content/providers/<cms>.js` returning the same
+  `SiteContent` shape, register it in `providers`, and set
+  `VITE_CONTENT_SOURCE=<cms>` (or change the default). **No component changes.**
+  Candidates: Sanity (what Allright uses), Contentful, or a headless Git CMS.
 
 3. **Likely additions once the design is finalized**
-   - `vue-router` if more than one page/section is needed.
-   - A CMS for editable content/imagery (Allright uses Sanity). Options:
-     Sanity, Contentful, or simple Markdown/JSON in-repo for a small site.
+   - `vue-router` if more than one page/section is needed (locale-aware routes).
    - Image optimization (responsive `srcset`, lazy loading, AVIF/WebP).
-   - Web fonts (e.g. a refined sans + Noto Sans JP for Japanese text).
+   - Web fonts (a refined sans + Noto Sans JP for Japanese text).
    - Scroll/intro animations (GSAP, `@vueuse/motion`, or CSS).
-   - Accessibility pass (semantic landmarks, focus states, reduced-motion).
+   - Accessibility pass (semantic landmarks, focus states, reduced motion).
 
 ---
 
-## Phase 3 — Choose hosting (cheaper is better)
+## Phase 3 — Hosting: GitHub Pages (confirmed)
 
-The site is a static bundle, so the cheapest viable option is **free static
-hosting**. Recommendation below; all options cost ¥0 for this traffic profile.
-
-| Option                | Cost | Custom domain + TLS | Notes                                              |
-| --------------------- | ---- | ------------------- | -------------------------------------------------- |
-| **GitHub Pages** ⭐    | Free | Yes (auto HTTPS)    | Zero extra accounts/secrets; pipeline already set up |
-| Cloudflare Pages      | Free | Yes                 | Best global CDN/perf; needs Cloudflare account/token |
-| Netlify               | Free | Yes                 | Great DX, form handling; needs account/token       |
-| Vercel                | Free | Yes                 | Great DX; needs account/token                      |
-
-**Decision: start on GitHub Pages** (already wired up, no third-party secrets).
-If we later want a faster edge network or CDN features, migrating to Cloudflare
-Pages is straightforward — only the deploy workflow and DNS change.
+The site is a static bundle served free from GitHub Pages with a custom domain
+and automatic HTTPS. The deploy workflow is already wired up.
 
 ### Enabling GitHub Pages
 
@@ -113,46 +137,39 @@ Pages is straightforward — only the deploy workflow and DNS change.
 2. Merge to `main`; the `Deploy to GitHub Pages` workflow publishes `dist/`.
 3. The included `public/CNAME` tells Pages to serve the custom domain.
 
+> If we ever want a faster edge network or CDN features, migrating to Cloudflare
+> Pages is straightforward — only the deploy workflow and DNS change.
+
 ---
 
-## Phase 4 — Request / buy the domain
+## Phase 4 — Register the domain (Onamae.com)
 
 Target: **`2bcdef4hijkl1n5pq3stuvwxyz.jp`** — a *general-use* (`汎用`) `.jp`
 domain (anyone may register multiple; no `.co.jp`-style corporate restriction).
 
-### Key requirement ⚠️
+### Key requirement
 
 A `.jp` domain **requires a permanent postal address in Japan** for the
-registrant. You do **not** need to be a Japanese citizen or company, but a valid
-Japanese mailing address is mandatory (a virtual-office address is generally
-accepted). You cannot register directly with the registry (JPRS) — you must use
-an accredited registrar.
+registrant (available — confirmed). You cannot register directly with the
+registry (JPRS); Onamae.com is an accredited registrar.
 
-### Registrar options & indicative pricing
+### Indicative pricing (Onamae.com)
 
-| Registrar                  | Register   | Renew        | Notes                            |
-| -------------------------- | ---------- | ------------ | -------------------------------- |
-| Onamae.com (GMO) ⭐         | ~¥0        | ~¥1,276/yr   | Largest JP registrar; cheapest   |
-| Star Domain                | ~¥1,280    | ~¥1,300/yr   | Simple, cheap renewals           |
-| Value-Domain               | ~¥2,035    | ~¥3,803/yr   | Bundles hosting/DNS              |
-| Sakura Internet            | varies     | varies       | Popular JP host + registrar      |
-| Gandi / Openprovider (intl)| higher     | higher       | If you lack a JP address service |
-
-> Prices fluctuate and promos are common — confirm at purchase time.
+- Registration: ~¥0 (frequent promo)
+- Renewal: ~¥1,276/yr
 
 ### Steps
 
-1. Pick a registrar (recommended: **Onamae.com** for lowest cost).
-2. Search for `2bcdef4hijkl1n5pq3stuvwxyz.jp` and verify availability.
-3. Provide a valid Japanese postal address as registrant.
-4. Enable WHOIS privacy if offered, and **auto-renew** to avoid expiry loss.
-5. Keep registrar login + renewal date documented.
+1. Sign in to Onamae.com and search for `2bcdef4hijkl1n5pq3stuvwxyz.jp`.
+2. Verify availability and register using the Japanese postal address.
+3. Enable WHOIS privacy if offered, and **auto-renew** to avoid expiry loss.
+4. Document the login + renewal date.
 
 ---
 
 ## Phase 5 — DNS configuration
 
-Point the domain at GitHub Pages. In the registrar's DNS panel:
+Point the domain at GitHub Pages. In Onamae.com's DNS panel:
 
 **Apex domain (`2bcdef4hijkl1n5pq3stuvwxyz.jp`)** — A records to GitHub Pages:
 
@@ -165,7 +182,7 @@ A   @   185.199.111.153
 
 (Optionally add the matching AAAA records for IPv6.)
 
-If you also want `www`, add:
+For `www` (optional):
 
 ```
 CNAME   www   <your-github-username>.github.io.
@@ -174,18 +191,13 @@ CNAME   www   <your-github-username>.github.io.
 Then:
 
 1. Repo → **Settings → Pages → Custom domain** → enter the domain (the `CNAME`
-   file already does this on deploy; the UI step verifies ownership).
-2. Wait for DNS check to pass, then enable **Enforce HTTPS**.
+   file already sets this on deploy; the UI step verifies ownership).
+2. Wait for the DNS check to pass, then enable **Enforce HTTPS**.
 3. Allow time for DNS propagation and certificate issuance.
-
-> Switching to Cloudflare Pages later: move the nameservers/records to
-> Cloudflare and set the project's custom domain there instead. (Note:
-> Cloudflare **Registrar** does not sell `.jp`, but Cloudflare **DNS/Pages**
-> works fine with a `.jp` registered elsewhere.)
 
 ---
 
-## Phase 6 — CI/CD pipeline (done in this PR)
+## Phase 6 — CI/CD pipeline (done)
 
 Two GitHub Actions workflows:
 
@@ -194,14 +206,14 @@ Two GitHub Actions workflows:
 - **`.github/workflows/deploy.yml`** — on push to `main`: build and publish
   `dist/` to GitHub Pages via the official Pages actions (no extra secrets).
 
-Future enhancements: add unit tests (Vitest) and an `e2e`/Lighthouse CI step,
-plus PR preview deploys (native on Cloudflare/Netlify/Vercel).
+Future enhancements: unit tests (Vitest), a Lighthouse CI step, and PR preview
+deploys.
 
 ---
 
 ## Phase 7 — Launch checklist
 
-- [ ] Final design implemented and content/imagery added.
+- [ ] Final design implemented; content/imagery added (both JA + EN).
 - [ ] Favicon + social/OG image set; titles and meta descriptions filled in.
 - [ ] Responsive QA (mobile / tablet / desktop) and cross-browser check.
 - [ ] Accessibility pass (contrast, focus, alt text, reduced motion).
@@ -213,12 +225,8 @@ plus PR preview deploys (native on Cloudflare/Netlify/Vercel).
 
 ---
 
-## Open decisions for you
+## Next up
 
-1. **Hosting**: confirm GitHub Pages, or prefer Cloudflare Pages for CDN/perf?
-2. **CMS vs. in-repo content**: will content change often (CMS) or rarely (in-repo)?
-3. **Domain registrar**: Onamae.com (cheapest) acceptable? Do you have a Japanese
-   postal address for registration, or do you need a virtual-office service?
-4. **Multi-language?** Japanese + English, or single language?
-
-Once you confirm these and share the design, we proceed through Phases 2–7.
+With these decisions locked in, the remaining work is: register the domain on
+Onamae.com + configure DNS (Phases 4–5), enable Pages (Phase 3), and implement
+the real design + bilingual content once the design specs arrive (Phase 2 → 7).
