@@ -11,14 +11,28 @@ site ships a clean "coming soon" placeholder.
 
 ---
 
+## Current state
+
+- ✅ Foundation, i18n, content layer, and CI/CD are merged to `main`.
+- ✅ GitHub Pages is enabled and **deploying on every push to `main`**.
+- 🌐 **Live preview (temporary):**
+  <https://yudainakazaki.github.io/margo-landingpage/>
+- ⏳ Custom domain `2bcdef4hijkl1n5pq3stuvwxyz.jp` not registered yet (owner).
+  Until then the site is served from the **project subpath**, so the build's
+  `base` is `/margo-landingpage/`. The cutover to the root domain is a single
+  documented step (see **Custom-domain cutover** below).
+
+---
+
 ## Confirmed decisions
 
 | Question        | Decision                                                                 |
 | --------------- | ------------------------------------------------------------------------ |
-| **Hosting**     | **GitHub Pages** for now (free, custom domain + auto HTTPS).             |
+| **Hosting**     | **GitHub Pages** (free, custom domain + auto HTTPS).                     |
 | **Content/CMS** | **In-repo content for now**, behind a provider abstraction so migrating to a real CMS later is a single-file change. |
 | **Domain**      | **Onamae.com** registrar; a Japanese postal address is available.        |
 | **Language**    | **Bilingual i18n: Japanese ⇄ English** (Japanese is the default).        |
+| **Canonical**   | Leaning **`www.` as canonical** (decide at cutover; apex redirects to it).|
 
 ---
 
@@ -47,9 +61,9 @@ site ships a clean "coming soon" placeholder.
 - [x] Minimal "coming soon" landing placeholder.
 - [x] Tooling: ESLint + Prettier.
 - [x] GitHub Actions: `ci.yml` (lint + build) and `deploy.yml` (Pages).
-- [x] `public/CNAME` pre-set to the production domain.
 - [x] **i18n (JA/EN)** with a language switcher and persisted preference.
 - [x] **CMS-ready content layer** (in-repo provider today).
+- [x] GitHub Pages enabled; pipeline deploying to the project URL.
 
 ---
 
@@ -71,8 +85,8 @@ The scaffold is intentionally thin so the real design drops in cleanly.
 
    ```bash
    npm install
-   npm run dev      # http://localhost:5173
-   npm run build    # outputs to dist/
+   npm run dev      # http://localhost:5173  (dev base is '/')
+   npm run build    # outputs to dist/ (base '/margo-landingpage/')
    npm run preview  # serve the production build locally
    ```
 
@@ -93,7 +107,7 @@ The scaffold is intentionally thin so the real design drops in cleanly.
        index.js            #   getSiteContent() + provider selection
        providers/local.js  #   in-repo provider
        data/site.js        #   the actual in-repo content (edit here)
-   public/                 # static files copied verbatim (favicon, CNAME)
+   public/                 # static files copied verbatim (favicon, CNAME at cutover)
    ```
 
 ### i18n (done)
@@ -126,19 +140,43 @@ Content is read through a single function, `getSiteContent(locale)`, from
 
 ---
 
-## Phase 3 — Hosting: GitHub Pages (confirmed)
+## Phase 3 — Hosting: GitHub Pages (live)
 
-The site is a static bundle served free from GitHub Pages with a custom domain
-and automatic HTTPS. The deploy workflow is already wired up.
+The site is a static bundle served free from GitHub Pages. The deploy workflow
+publishes `dist/` on every push to `main`.
 
-### Enabling GitHub Pages
+- **Enable once (done)**: Settings → Pages → Source: **GitHub Actions**. (The
+  workflow token can't create the Pages site itself, so this one-time UI toggle
+  was required.)
+- **Project URL (current)**: <https://yudainakazaki.github.io/margo-landingpage/>
+  — works because the build `base` is `/margo-landingpage/`.
 
-1. Repo → **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-2. Merge to `main`; the `Deploy to GitHub Pages` workflow publishes `dist/`.
-3. The included `public/CNAME` tells Pages to serve the custom domain.
+### Base path, explained
 
-> If we ever want a faster edge network or CDN features, migrating to Cloudflare
-> Pages is straightforward — only the deploy workflow and DNS change.
+GitHub Pages *project* sites live under `/<repo>/`, so built asset URLs must be
+prefixed with that path or the browser requests them from the wrong place
+(blank page). The custom domain serves from the **root**, where `base` must be
+`/`. `vite.config.js` therefore defaults the build to `/margo-landingpage/` and
+lets `VITE_BASE` override it at cutover.
+
+---
+
+## Phase 3.5 — Custom-domain cutover checklist
+
+Do these **once the domain is registered and DNS can be set**:
+
+1. **Decide canonical host** — apex `DOMAIN.jp` or `www.DOMAIN.jp`
+   (current lean: `www`). The chosen host goes in the `CNAME` file.
+2. **Re-add `public/CNAME`** containing the canonical host, e.g.
+   `www.2bcdef4hijkl1n5pq3stuvwxyz.jp` (or the apex).
+3. **Build at the root**: set `VITE_BASE=/` for the production build (e.g. add
+   `env: { VITE_BASE: '/' }` to the build step in `.github/workflows/deploy.yml`,
+   or change the default in `vite.config.js`).
+4. **DNS at Onamae** (see Phase 5): apex A-records to GitHub + `www` CNAME.
+5. **GitHub**: Settings → Pages → Custom domain (auto-filled by the `CNAME`
+   file) → wait for the DNS check → enable **Enforce HTTPS**.
+
+After cutover the project URL redirects to the custom domain automatically.
 
 ---
 
@@ -182,16 +220,16 @@ A   @   185.199.111.153
 
 (Optionally add the matching AAAA records for IPv6.)
 
-For `www` (optional):
+For `www` (needed if `www` is canonical, or to redirect `www` → apex):
 
 ```
-CNAME   www   <your-github-username>.github.io.
+CNAME   www   yudainakazaki.github.io.
 ```
 
 Then:
 
 1. Repo → **Settings → Pages → Custom domain** → enter the domain (the `CNAME`
-   file already sets this on deploy; the UI step verifies ownership).
+   file sets this on deploy; the UI step verifies ownership).
 2. Wait for the DNS check to pass, then enable **Enforce HTTPS**.
 3. Allow time for DNS propagation and certificate issuance.
 
@@ -218,7 +256,7 @@ deploys.
 - [ ] Responsive QA (mobile / tablet / desktop) and cross-browser check.
 - [ ] Accessibility pass (contrast, focus, alt text, reduced motion).
 - [ ] Performance pass (Lighthouse ≥ 90; optimized images; preloaded fonts).
-- [ ] Domain registered, DNS set, HTTPS enforced and verified.
+- [ ] Domain registered, DNS set, HTTPS enforced and verified (Phase 3.5).
 - [ ] Analytics (privacy-friendly, e.g. Plausible/Umami) — optional.
 - [ ] `main` protected; CI required; auto-renew enabled on the domain.
 - [ ] Announce / go live.
@@ -227,6 +265,6 @@ deploys.
 
 ## Next up
 
-With these decisions locked in, the remaining work is: register the domain on
-Onamae.com + configure DNS (Phases 4–5), enable Pages (Phase 3), and implement
-the real design + bilingual content once the design specs arrive (Phase 2 → 7).
+The pipeline is live at the project URL. Remaining: register the domain on
+Onamae + configure DNS, run the **Custom-domain cutover** (Phase 3.5), and
+implement the real design + bilingual content once specs arrive (Phase 2 → 7).

@@ -7,7 +7,8 @@ Vite** and deployed as a static site. Bilingual (Japanese / English).
 > editorial, image-forward. Detailed design TBD; the site currently ships a
 > "coming soon" placeholder.
 
-Production domain (planned): **`2bcdef4hijkl1n5pq3stuvwxyz.jp`**
+- **Live preview (temporary):** <https://yudainakazaki.github.io/margo-landingpage/>
+- **Production domain (planned):** `2bcdef4hijkl1n5pq3stuvwxyz.jp`
 
 ## Getting started
 
@@ -20,7 +21,7 @@ npm run lint     # lint with ESLint
 npm run format   # format with Prettier
 ```
 
-Requires Node.js 20+.
+Requires Node.js 20+ (CI/CD uses Node 22).
 
 ## Project structure
 
@@ -36,7 +37,7 @@ src/
     index.js               #   getSiteContent() + provider selection
     providers/local.js     #   in-repo provider
     data/site.js           #   editable in-repo content
-public/                    # static assets copied as-is (favicon, CNAME)
+public/                    # static assets copied as-is (favicon)
 .github/workflows/         # CI (lint+build) and GitHub Pages deploy
 ```
 
@@ -64,8 +65,15 @@ stay in sync with the active locale.
 ## Deployment
 
 Pushes to `main` build and deploy to **GitHub Pages** automatically via
-`.github/workflows/deploy.yml`. The custom domain is configured through
-`public/CNAME`.
+`.github/workflows/deploy.yml`.
+
+### Base path & custom-domain cutover
+
+GitHub Pages *project* sites are served from `/<repo>/`, so the production build
+defaults `base` to `/margo-landingpage/` (see `vite.config.js`). The dev server
+uses `/`. When the custom domain is ready, build with `VITE_BASE=/`, re-add
+`public/CNAME` with the chosen host, and configure DNS — see the **Custom-domain
+cutover** section in [ROADMAP.md](./ROADMAP.md).
 
 ## Roadmap
 
