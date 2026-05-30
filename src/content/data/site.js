@@ -12,23 +12,19 @@ export const siteContent = {
   en: {
     meta: {
       title: 'Margo',
-      description: 'Margo — an art project. Site coming soon.',
+      description: 'Margo — an art project.',
     },
     hero: {
-      eyebrow: 'Art Project',
       title: 'Margo',
-      tagline: 'Coming soon.',
     },
   },
   ja: {
     meta: {
       title: 'Margo（マーゴ）',
-      description: 'Margo — アートプロジェクト。近日公開。',
+      description: 'Margo — アートプロジェクト。',
     },
     hero: {
-      eyebrow: 'アートプロジェクト',
       title: 'Margo',
-      tagline: '近日公開',
     },
   },
 }
