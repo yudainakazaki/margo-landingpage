@@ -10,10 +10,9 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-  // Served from the root in every environment:
-  //   - GitHub Pages *user* site:   https://yudainakazaki.github.io/
-  //   - Custom domain (later):      https://2bcdef4hijkl1n5pq3stuvwxyz.jp/
-  // So base stays '/'. (A GitHub Pages *project* site would instead need
-  // base '/<repo>/', which is exactly the subpath hassle we're avoiding.)
+  // The site is served from the root of the custom domain
+  //   https://www.2bcdef4hijkl1n5pq3stuvwxyz.jp/
+  // (a custom domain serves at the root even for a GitHub Pages *project*
+  // repo, so the repo name never appears in the URL). Hence base '/'.
   base: '/',
 })
