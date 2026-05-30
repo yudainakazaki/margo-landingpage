@@ -16,9 +16,7 @@ import { localProvider } from '@/content/providers/local'
  * @property {string} description
  *
  * @typedef {Object} SiteHero
- * @property {string} eyebrow
  * @property {string} title
- * @property {string} tagline
  *
  * @typedef {Object} SiteContent
  * @property {SiteMeta} meta

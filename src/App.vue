@@ -38,9 +38,7 @@ watchEffect(() => {
     </header>
 
     <main v-if="content" class="landing">
-      <p class="landing__eyebrow">{{ content.hero.eyebrow }}</p>
       <h1 class="landing__title">{{ content.hero.title }}</h1>
-      <p class="landing__tagline">{{ content.hero.tagline }}</p>
     </main>
 
     <SiteFooter />
@@ -79,25 +77,12 @@ watchEffect(() => {
   text-align: center;
 }
 
-.landing__eyebrow {
-  text-transform: uppercase;
-  letter-spacing: 0.4em;
-  font-size: 0.75rem;
-  color: var(--color-muted);
-  margin: 0 0 1.5rem;
-}
-
 .landing__title {
   font-size: clamp(3rem, 14vw, 9rem);
   font-weight: 500;
   line-height: 1;
   margin: 0;
-  letter-spacing: -0.02em;
-}
-
-.landing__tagline {
-  margin: 1.5rem 0 0;
-  font-size: clamp(1rem, 2.5vw, 1.25rem);
-  color: var(--color-muted);
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
 }
 </style>
