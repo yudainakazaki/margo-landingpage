@@ -7,7 +7,7 @@ Vite** and deployed as a static site. Bilingual (Japanese / English).
 > editorial, image-forward. Detailed design TBD; the site currently ships a
 > "coming soon" placeholder.
 
-- **Production domain:** `www.2bcdef4hijkl1n5pq3stuvwxyz.jp` (cutover in progress)
+- **Production domain:** `2bcdef4hijkl1n5pq3stuvwxyz.jp` (cutover in progress)
 
 ## Getting started
 
@@ -68,8 +68,8 @@ Pushes to `main` build and deploy to **GitHub Pages** automatically via
 
 ### Custom domain
 
-The site is served from the root of **`www.2bcdef4hijkl1n5pq3stuvwxyz.jp`**
-(`www` canonical; the apex redirects to it), configured via `public/CNAME`.
+The site is served from the root of **`2bcdef4hijkl1n5pq3stuvwxyz.jp`**
+(the apex is canonical; `www` redirects to it), configured via `public/CNAME`.
 Vite `base` is `/`. The DNS records, GitHub Pages custom-domain setup, and HTTPS
 steps are in the **Custom-domain cutover** section of
 [ROADMAP.md](./ROADMAP.md).

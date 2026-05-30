@@ -2,7 +2,7 @@
 
 Margo is an art-project website built with **Vue 3 (Composition API) + Vite**.
 This document is the single source of truth for how we take the project from an
-empty repository to a live site on **`www.2bcdef4hijkl1n5pq3stuvwxyz.jp`**.
+empty repository to a live site on **`2bcdef4hijkl1n5pq3stuvwxyz.jp`**.
 
 The visual inspiration is [allright-inc.jp](https://www.allright-inc.jp/):
 minimal, editorial, image-forward, generous whitespace, refined typography, and
@@ -16,9 +16,10 @@ site ships a clean "coming soon" placeholder.
 - ✅ Foundation, i18n, content layer, and CI/CD are merged to `main`.
 - ✅ GitHub Pages enabled and **deploying on every push to `main`**.
 - ✅ **Domain registered** at Onamae.com: `2bcdef4hijkl1n5pq3stuvwxyz.jp`.
-- 🚀 **In progress: custom-domain cutover** (this PR) — `www` as the canonical
-  host, served from the root. No repo rename needed (a custom domain serves at
-  the root even for a project repo), so the earlier user-site idea is dropped.
+- 🚀 **In progress: custom-domain cutover** (this PR) — the **apex**
+  (`2bcdef4hijkl1n5pq3stuvwxyz.jp`, no `www`) is the canonical host, served from
+  the root. No repo rename needed (a custom domain serves at the root even for a
+  project repo).
 
 ---
 
@@ -27,7 +28,7 @@ site ships a clean "coming soon" placeholder.
 | Question        | Decision                                                                 |
 | --------------- | ------------------------------------------------------------------------ |
 | **Hosting**     | **GitHub Pages** (project repo `margo-landingpage`) + custom domain.     |
-| **Canonical**   | **`www.2bcdef4hijkl1n5pq3stuvwxyz.jp`** (apex redirects to `www`).        |
+| **Canonical**   | **`2bcdef4hijkl1n5pq3stuvwxyz.jp`** (apex; `www` redirects to it).        |
 | **Content/CMS** | **In-repo content for now**, behind a provider abstraction so migrating to a real CMS later is a single-file change. |
 | **Domain**      | **Onamae.com** registrar; registered.                                    |
 | **Language**    | **Bilingual i18n: Japanese ⇄ English** (Japanese is the default).        |
@@ -65,11 +66,12 @@ site ships a clean "coming soon" placeholder.
 
 ## Phase 1 — Custom-domain cutover (this PR + your DNS steps)
 
-The site uses `www` as the canonical host; the apex redirects to it.
+The site uses the **apex** (`2bcdef4hijkl1n5pq3stuvwxyz.jp`) as the canonical
+host; `www` redirects to it.
 
 ### A. In the repo (this PR)
 
-- `public/CNAME` = `www.2bcdef4hijkl1n5pq3stuvwxyz.jp`
+- `public/CNAME` = `2bcdef4hijkl1n5pq3stuvwxyz.jp`
 - Vite `base` = `/` (a custom domain serves from the root).
 
 ### B. DNS at Onamae.com
@@ -77,13 +79,14 @@ The site uses `www` as the canonical host; the apex redirects to it.
 In Onamae's DNS settings, add:
 
 ```
-# Apex → GitHub Pages IPs (so the apex can redirect to www)
+# Apex (canonical) → GitHub Pages IPs
 A      @     185.199.108.153
 A      @     185.199.109.153
 A      @     185.199.110.153
 A      @     185.199.111.153
 
-# www → your GitHub Pages host (canonical)
+# www → your GitHub Pages host (so www redirects to the apex). Optional but
+# recommended so visitors typing "www." still reach the site.
 CNAME  www   yudainakazaki.github.io.
 ```
 
@@ -93,7 +96,7 @@ CNAME  www   yudainakazaki.github.io.
 
 1. Merge this PR so the deploy publishes the `CNAME` file.
 2. **Settings → Pages → Custom domain** should auto-fill with
-   `www.2bcdef4hijkl1n5pq3stuvwxyz.jp` (from the `CNAME` file). If not, enter it.
+   `2bcdef4hijkl1n5pq3stuvwxyz.jp` (from the `CNAME` file). If not, enter it.
 3. Wait for the **DNS check** to pass (propagation can take minutes–hours).
 4. Enable **Enforce HTTPS** once the certificate is issued.
 5. (Optional, recommended) Add the **domain verification** TXT record GitHub
@@ -101,8 +104,8 @@ CNAME  www   yudainakazaki.github.io.
 
 ### D. Verify
 
-- `https://www.2bcdef4hijkl1n5pq3stuvwxyz.jp/` loads the site over HTTPS.
-- `https://2bcdef4hijkl1n5pq3stuvwxyz.jp/` (apex) redirects to the `www` host.
+- `https://2bcdef4hijkl1n5pq3stuvwxyz.jp/` loads the site over HTTPS.
+- `https://www.2bcdef4hijkl1n5pq3stuvwxyz.jp/` redirects to the apex.
 - The old `yudainakazaki.github.io/...` URL redirects to the custom domain.
 
 ---
