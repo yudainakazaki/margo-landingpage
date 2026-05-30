@@ -7,8 +7,7 @@ Vite** and deployed as a static site. Bilingual (Japanese / English).
 > editorial, image-forward. Detailed design TBD; the site currently ships a
 > "coming soon" placeholder.
 
-- **Live preview (temporary):** <https://yudainakazaki.github.io/margo-landingpage/>
-- **Production domain (planned):** `2bcdef4hijkl1n5pq3stuvwxyz.jp`
+- **Production domain:** `2bcdef4hijkl1n5pq3stuvwxyz.jp` (cutover in progress)
 
 ## Getting started
 
@@ -37,7 +36,7 @@ src/
     index.js               #   getSiteContent() + provider selection
     providers/local.js     #   in-repo provider
     data/site.js           #   editable in-repo content
-public/                    # static assets copied as-is (favicon)
+public/                    # static assets copied as-is (favicon, CNAME)
 .github/workflows/         # CI (lint+build) and GitHub Pages deploy
 ```
 
@@ -67,16 +66,16 @@ stay in sync with the active locale.
 Pushes to `main` build and deploy to **GitHub Pages** automatically via
 `.github/workflows/deploy.yml`.
 
-### Base path & custom-domain cutover
+### Custom domain
 
-GitHub Pages *project* sites are served from `/<repo>/`, so the production build
-defaults `base` to `/margo-landingpage/` (see `vite.config.js`). The dev server
-uses `/`. When the custom domain is ready, build with `VITE_BASE=/`, re-add
-`public/CNAME` with the chosen host, and configure DNS — see the **Custom-domain
-cutover** section in [ROADMAP.md](./ROADMAP.md).
+The site is served from the root of **`2bcdef4hijkl1n5pq3stuvwxyz.jp`**
+(the apex is canonical; `www` redirects to it), configured via `public/CNAME`.
+Vite `base` is `/`. The DNS records, GitHub Pages custom-domain setup, and HTTPS
+steps are in the **Custom-domain cutover** section of
+[ROADMAP.md](./ROADMAP.md).
 
 ## Roadmap
 
 See **[ROADMAP.md](./ROADMAP.md)** for the full plan and confirmed decisions:
-hosting (GitHub Pages), content (in-repo → CMS-ready), domain (Onamae.com `.jp`),
-DNS, CI/CD, and the launch checklist.
+hosting (GitHub Pages + custom domain), content (in-repo → CMS-ready), domain
+(Onamae.com `.jp`), DNS, CI/CD, and the launch checklist.
